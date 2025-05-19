@@ -1,19 +1,15 @@
 #!/bin/sh
-# entrypoint.sh - RENDER DEBUGGING VERSION
+# entrypoint.sh - For running FastAPI with Uvicorn on Render
 
-echo "--- RENDER ENTRYPOINT DEBUG ---"
-echo "Attempting to run whoami: $(whoami)"
-echo "Shell is: $0"
-echo "PORT variable from environment: ($PORT)"
+# Set the default port if PORT environment variable is not set or is empty.
+# Render will provide the PORT environment variable.
+APP_PORT=${PORT:-8000}
 
-APP_PORT_TEST=${PORT:-8000}
-echo "APP_PORT_TEST after expansion: ($APP_PORT_TEST)"
+echo "INFO: Starting Uvicorn server."
+echo "INFO: Listening on host 0.0.0.0 and port $APP_PORT"
+echo "INFO: Application module: main:app"
 
-# Create a file to see if script runs and vars are set
-echo "PORT from env: ($PORT)" > /app/render_env_test.txt
-echo "APP_PORT_TEST: ($APP_PORT_TEST)" >> /app/render_env_test.txt
-
-echo "Intentionally not starting Uvicorn for this test."
-echo "Check /app/render_env_test.txt if you can access the container filesystem or build artifacts."
-echo "Exiting entrypoint debug script."
-# exec uvicorn main:app --host 0.0.0.0 --port "$APP_PORT_TEST" # Commented out for now
+# Start Uvicorn
+# Use exec to replace the shell process with the Uvicorn process.
+# This ensures Uvicorn properly handles signals from Render (like for stopping or restarting).
+exec uvicorn main:app --host 0.0.0.0 --port "$APP_PORT"
