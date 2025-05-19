@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.git/
+.vscode/
+.env 
+# Add any other local development files/folders you don't want in the image
