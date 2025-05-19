@@ -37,7 +37,7 @@ except ImportError as e:
 
 # Import and configure Gemini
 import google.generativeai as genai
-from google.generativeai.types import Part
+
 app = FastAPI()
 
 # --- Configure Gemini ---
@@ -257,15 +257,23 @@ async def ask_bot(bot_query: BotQuery):
             if api_response_content is None: # Should not happen if logic above is correct
                 api_response_content = {"error": "Internal error processing tool call."}
 
+            function_response_payload = {
+                "function_response": {
+                    "name": function_name,
+                    "response": api_response_content # This is your JSON-serializable dict
+                }
+            }
+
+            contents_for_final_answer = [
+                response_candidate.content,   # The model's previous turn (which included the function_call)
+                function_response_payload     # Your function's result, structured as a dict
+            ]
+            
+            print(f"BOT_ENDPOINT: Sending to Gemini for final answer (contents_for_final_answer): {json.dumps(contents_for_final_answer, indent=2, default=str)}")
+
+
             second_gemini_response = gemini_model.generate_content(
-                [
-                    # The original user query for context, or parts that triggered the function call
-                    response_candidate.content, # Send back the previous turn from Gemini that included the function call
-                    Part.from_function_response( # Use Part.from_function_response
-                        name=function_name,
-                        response=api_response_content # This must be JSON serializable
-                    ),
-                ]
+                contents_for_final_answer # Pass the correctly structured list
             )
             return {"answer": second_gemini_response.text, "debug_tool_summary": tool_response_summary_for_debug}
 
